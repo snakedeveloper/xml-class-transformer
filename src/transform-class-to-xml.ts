@@ -9,12 +9,12 @@ import {
 } from './common';
 import { InternalXmlPropertyOptions } from './internal-types';
 
-export function classToXml(entity: any, options?: ClassToXmlOptions): string {
-  const tree = classToXmlInternal(entity, '', entity.constructor);
+export function classToXml( entity: any, options?: ClassToXmlOptions ): string {
+  const tree = classToXmlInternal( entity, '', entity.constructor );
 
   const rootElem: xmljs.Element = { elements: [tree] };
 
-  if (options?.declaration !== false) {
+  if ( options?.declaration !== false ) {
     if (
       typeof options?.declaration === 'object' &&
       options?.declaration !== null
@@ -27,7 +27,7 @@ export function classToXml(entity: any, options?: ClassToXmlOptions): string {
     }
   }
 
-  return xmljs.js2xml(rootElem, options);
+  return xmljs.js2xml( rootElem, options );
 }
 
 function classToXmlInternal(
@@ -35,26 +35,26 @@ function classToXmlInternal(
   name: string | undefined,
   entityConstructor: XmlType,
 ): xmljs.Element {
-  if (isPrimitiveType(entityConstructor)) {
-    return primitiveTypeToXml(entity, name, entityConstructor);
+  if ( isPrimitiveType( entityConstructor ) ) {
+    return primitiveTypeToXml( entity, name, entityConstructor );
   }
 
-  const metadatas = registry.get(entityConstructor!);
+  const metadatas = registry.getWithInheritance( entityConstructor! );
 
-  if (!metadatas) {
-    throw errUnknownClass(entityConstructor);
+  if ( !metadatas ) {
+    throw errUnknownClass( entityConstructor );
   }
 
   const elemName = name || metadatas.entity.name;
 
-  if (!elemName) {
-    throw errNoXmlNameForClass(entityConstructor);
+  if ( !elemName ) {
+    throw errNoXmlNameForClass( entityConstructor );
   }
 
   const mutChildren: xmljs.Element[] = [];
   const mutAttributes: xmljs.Attributes = {};
 
-  for (const [classKey, opts] of metadatas.properties) {
+  for ( const [classKey, opts] of metadatas.properties ) {
     marshalProperty(
       entityConstructor,
       entity,
@@ -65,7 +65,7 @@ function classToXmlInternal(
     );
   }
 
-  if (metadatas.entity.xmlns) {
+  if ( metadatas.entity.xmlns ) {
     mutAttributes['xmlns'] = metadatas.entity.xmlns;
   }
 
@@ -82,10 +82,10 @@ function primitiveTypeToXml(
   name: string | undefined,
   entityConstructor: XmlPrimitiveType,
 ): xmljs.Element {
-  const defaultMarshaller = getDefaultMarshaller(entityConstructor);
-  const text = defaultMarshaller.marshal(value);
+  const defaultMarshaller = getDefaultMarshaller( entityConstructor );
+  const text = defaultMarshaller.marshal( value );
 
-  if (text === undefined) {
+  if ( text === undefined ) {
     // should never happen, but just in case
     return {};
   }
@@ -110,9 +110,9 @@ function marshalProperty(
   mutChildren: xmljs.Element[],
   mutAttributes: xmljs.Attributes,
 ) {
-  if (opts.comments) {
-    marshalCommentsProperty(entity, classKey, mutChildren);
-  } else if (opts.attr) {
+  if ( opts.comments ) {
+    marshalCommentsProperty( entity, classKey, mutChildren );
+  } else if ( opts.attr ) {
     marshalAttributeProperty(
       containerEntityConstructor,
       entity,
@@ -120,11 +120,11 @@ function marshalProperty(
       classKey,
       mutAttributes,
     );
-  } else if (opts.chardata) {
-    marshalChardataProperty(entity, opts, classKey, mutChildren);
-  } else if (opts.array) {
-    marshalArrayProperty(entity, opts, classKey, mutChildren);
-  } else if (opts.marshaller || opts.isPrimitiveType()) {
+  } else if ( opts.chardata ) {
+    marshalChardataProperty( entity, opts, classKey, mutChildren );
+  } else if ( opts.array ) {
+    marshalArrayProperty( entity, opts, classKey, mutChildren );
+  } else if ( opts.marshaller || opts.isPrimitiveType() ) {
     marshalPrimitiveTypeProperty(
       containerEntityConstructor,
       entity,
@@ -132,10 +132,10 @@ function marshalProperty(
       classKey,
       mutChildren,
     );
-  } else if (opts.union) {
-    marshalUnionProperty(entity, classKey, mutChildren);
+  } else if ( opts.union ) {
+    marshalUnionProperty( entity, classKey, mutChildren );
   } else {
-    marshalChildClassElemProperty(entity, opts, classKey, mutChildren);
+    marshalChildClassElemProperty( entity, opts, classKey, mutChildren );
   }
 }
 
@@ -144,12 +144,12 @@ function marshalCommentsProperty(
   classKey: string,
   mutChildren: xmljs.Element[],
 ) {
-  if (Array.isArray(entity[classKey])) {
-    for (const comment of entity[classKey]) {
-      mutChildren.push({
+  if ( Array.isArray( entity[classKey] ) ) {
+    for ( const comment of entity[classKey] ) {
+      mutChildren.push( {
         type: 'comment',
         comment: comment === null || comment === undefined ? '' : `${comment}`,
-      });
+      } );
     }
   }
 }
@@ -161,16 +161,16 @@ function marshalAttributeProperty(
   classKey: string,
   mutAttributes: xmljs.Attributes,
 ) {
-  if (!opts.name) {
+  if ( !opts.name ) {
     throw new Error(
       `xml-class-transformer: no name is specified for the property ${containerEntityConstructor?.name}#${classKey}. ` +
-        `Specify it with the @XmlAttribute({ name: '...' }) decorator.`,
+      `Specify it with the @XmlAttribute({ name: '...' }) decorator.`,
     );
   }
 
-  const value = marshal(entity[classKey], opts);
+  const value = marshal( entity[classKey], opts );
 
-  if (value === undefined) {
+  if ( value === undefined ) {
     return;
   }
 
@@ -183,16 +183,16 @@ function marshalChardataProperty(
   classKey: string,
   mutChildren: xmljs.Element[],
 ) {
-  const value = marshal(entity[classKey], opts);
+  const value = marshal( entity[classKey], opts );
 
-  if (value === undefined) {
+  if ( value === undefined ) {
     return;
   }
 
-  mutChildren.push({
+  mutChildren.push( {
     type: 'text',
     text: value,
-  });
+  } );
 }
 
 function marshalArrayProperty(
@@ -201,23 +201,23 @@ function marshalArrayProperty(
   classKey: string,
   mutChildren: xmljs.Element[],
 ) {
-  if (entity[classKey] === null || entity[classKey] === undefined) {
+  if ( entity[classKey] === null || entity[classKey] === undefined ) {
     return;
   }
 
-  for (const entityFromArray of entity[classKey]) {
-    if (opts.marshaller || opts.isPrimitiveType()) {
-      const marshalledValue = marshal(entityFromArray, opts);
+  for ( const entityFromArray of entity[classKey] ) {
+    if ( opts.marshaller || opts.isPrimitiveType() ) {
+      const marshalledValue = marshal( entityFromArray, opts );
 
-      if (marshalledValue === undefined) {
+      if ( marshalledValue === undefined ) {
         continue;
       }
 
-      mutChildren.push(primitiveTypeToXml(entityFromArray, opts.name, String));
+      mutChildren.push( primitiveTypeToXml( entityFromArray, opts.name, String ) );
     } else {
       // Do not process null and undefined values in the array.
       // When we impl support for primitive unions maybe this should change
-      if (entityFromArray === null || entityFromArray === undefined) {
+      if ( entityFromArray === null || entityFromArray === undefined ) {
         continue;
       }
 
@@ -230,7 +230,7 @@ function marshalArrayProperty(
 
       // The opts.name will be undefined if !!opts.union, but thats ok.
       mutChildren.push(
-        classToXmlInternal(entityFromArray, opts.name, classConstructor),
+        classToXmlInternal( entityFromArray, opts.name, classConstructor ),
       );
     }
   }
@@ -243,20 +243,20 @@ function marshalPrimitiveTypeProperty(
   classKey: string,
   mutChildren: xmljs.Element[],
 ) {
-  if (!opts.name) {
+  if ( !opts.name ) {
     throw new Error(
       `xml-class-transformer: no name is specified for property ${containerEntityConstructor?.name}#${classKey}. ` +
-        `Specify it with @XmlChildElem({ name: '...' }) decorator.`,
+      `Specify it with @XmlChildElem({ name: '...' }) decorator.`,
     );
   }
 
-  const value = marshal(entity[classKey], opts);
+  const value = marshal( entity[classKey], opts );
 
-  if (value === undefined) {
+  if ( value === undefined ) {
     return;
   }
 
-  mutChildren.push(primitiveTypeToXml(value, opts.name, String));
+  mutChildren.push( primitiveTypeToXml( value, opts.name, String ) );
 }
 
 function marshalUnionProperty(
@@ -268,7 +268,7 @@ function marshalUnionProperty(
   const classConstructor = entity[classKey].constructor;
 
   mutChildren.push(
-    classToXmlInternal(entity[classKey], undefined, classConstructor),
+    classToXmlInternal( entity[classKey], undefined, classConstructor ),
   );
 }
 
@@ -280,9 +280,9 @@ function marshalChildClassElemProperty(
 ) {
   // If null then just skip this embedded element for the current impl
   // TODO: maybe non array unions are broken
-  if (entity[classKey] !== undefined && entity[classKey] !== null) {
+  if ( entity[classKey] !== undefined && entity[classKey] !== null ) {
     mutChildren.push(
-      classToXmlInternal(entity[classKey], opts.name, opts.type!()),
+      classToXmlInternal( entity[classKey], opts.name, opts.type!() ),
     );
   }
 }
@@ -292,12 +292,12 @@ function marshal(
   opts: InternalXmlPropertyOptions,
 ): string | undefined {
   let marshalled = value;
-  if (opts.marshaller) {
-    marshalled = opts.marshaller.marshal(value);
-  } else if (opts.type) {
+  if ( opts.marshaller ) {
+    marshalled = opts.marshaller.marshal( value );
+  } else if ( opts.type ) {
     const type = opts.type();
-    if (isPrimitiveType(type)) {
-      marshalled = getDefaultMarshaller(type).marshal(value);
+    if ( isPrimitiveType( type ) ) {
+      marshalled = getDefaultMarshaller( type ).marshal( value );
     }
   }
 

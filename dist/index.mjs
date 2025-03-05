@@ -202,6 +202,34 @@ class ClassMetadataRegistry {
     get(classConstr) {
         return this.registry.get(classConstr);
     }
+    /**
+     * Gets metadata for a class, including all metadata from parent classes.
+     * This ensures that property decorators in parent classes are also included
+     */
+    getWithInheritance(classConstr) {
+        const metadata = this.registry.get(classConstr);
+        if (!metadata) {
+            return undefined;
+        }
+        const result = {
+            entity: Object.assign({}, metadata.entity),
+            properties: new Map(metadata.properties),
+        };
+        let proto = Object.getPrototypeOf(classConstr.prototype);
+        while (proto && proto.constructor !== Object) {
+            const parentClass = proto.constructor;
+            const parentMetadata = this.registry.get(parentClass);
+            if (parentMetadata) {
+                for (const [propKey, propOpts] of parentMetadata.properties.entries()) {
+                    if (!result.properties.has(propKey)) {
+                        result.properties.set(propKey, propOpts);
+                    }
+                }
+            }
+            proto = Object.getPrototypeOf(proto);
+        }
+        return result;
+    }
     resolveUnionComponents(union) {
         // TODO: optimize and cache this map:
         const tagNameToClassType = new Map();
@@ -241,7 +269,7 @@ function classToXmlInternal(entity, name, entityConstructor) {
     if (isPrimitiveType(entityConstructor)) {
         return primitiveTypeToXml(entity, name, entityConstructor);
     }
-    const metadatas = registry.get(entityConstructor);
+    const metadatas = registry.getWithInheritance(entityConstructor);
     if (!metadatas) {
         throw errUnknownClass(entityConstructor);
     }
@@ -416,7 +444,7 @@ function xmlToClassInternal(xmlElement, classConstructor) {
         const text = getChardataFromElem(xmlElement);
         return unmarshalPrimitiveType(text, classConstructor);
     }
-    const metadatas = registry.get(classConstructor);
+    const metadatas = registry.getWithInheritance(classConstructor);
     if (!metadatas) {
         throw new Error('Unknown class ' + classConstructor);
     }
